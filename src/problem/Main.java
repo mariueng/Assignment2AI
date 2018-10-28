@@ -2,14 +2,19 @@ package problem;
 
 import java.io.IOException;
 
+import solver.Solver;
+
 public class Main {
 
     public static void main(String[] args) {
 
         ProblemSpec ps;
         try {
-            ps = new ProblemSpec("examples/level_1/input_lvl1.txt");
-            System.out.println(ps.toString());
+        	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\input_lvl1.txt";
+
+            ps = new ProblemSpec(inputFileName);
+            String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\solvedOutput_lvl1.txt";
+            Solver solver = new Solver(ps, outputFileName);
         } catch (IOException e) {
             System.out.println("IO Exception occurred");
             System.exit(1);

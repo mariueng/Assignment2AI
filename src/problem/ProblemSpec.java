@@ -112,7 +112,7 @@ public class ProblemSpec {
             line = input.readLine();
             lineNo++;
             s = new Scanner(line);
-            discountFactor = s.nextDouble();
+            discountFactor = Double.valueOf(s.next());
             slipRecoveryTime = s.nextInt();
             repairTime = s.nextInt();
             s.close();
@@ -211,7 +211,7 @@ public class ProblemSpec {
             lineNo++;
             s = new Scanner(line);
             for (int i = 0; i < NT; i++) {
-                slipProbability[i] = s.nextDouble();
+                slipProbability[i] = Double.valueOf(s.next());
 
             }
             s.close();
@@ -277,7 +277,7 @@ public class ProblemSpec {
         double[] probabilities = new double[CAR_MOVE_RANGE];
         double pSum = 0;
         for (int j = 0; j < CAR_MOVE_RANGE; j++) {
-            probabilities[j] = s.nextDouble();
+            probabilities[j] = Double.valueOf(s.next());
             pSum += probabilities[j];
         }
         probMap.put(thingName, probabilities);
@@ -311,7 +311,7 @@ public class ProblemSpec {
         double[] probabilities = new double[CAR_MOVE_RANGE];
         double pSum = 0;
         for (int j = 0; j < CAR_MOVE_RANGE; j++) {
-            probabilities[j] = s.nextDouble();
+            probabilities[j] = Double.valueOf(s.next());
             pSum += probabilities[j];
         }
         probMap.put(tireModel, probabilities);

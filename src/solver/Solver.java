@@ -1,10 +1,12 @@
 package solver;
 import simulator.*;
+import sun.java2d.pipe.hw.AccelTypedVolatileImage;
 import problem.*;
  
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Random;
  
 public class Solver {
    
@@ -22,6 +24,7 @@ public class Solver {
     private int numberOfCarTypes;
     private int numberOfDrivers;
     private int numberOfTireTypes;
+    private int numberOfActions;
     private Terrain[] map; //1D map of environment
    
     private ArrayList<Terrain> terrainTypes = new ArrayList();
@@ -58,19 +61,78 @@ public class Solver {
         this.numberOfCarTypes = cars.size();
         this.numberOfDrivers = drivers.size();
         this.numberOfTireTypes = tires.size();
+        this.numberOfActions = actions.size();
         this.discountFactor = ps.getDiscountFactor();
         this.goalIndex = ps.getN();
         this.maxNumberOfTimeSteps = ps.getMaxT();
         this.currentState = State.getStartState(ps.getFirstCarType(), ps.getFirstDriver(), ps.getFirstTireModel());
-        run();
+       // run(outputFileName);
+        Simulator simulator = new Simulator(ps, outputFileName);
+        runRandom(simulator);
        
     }
    
    
-    //methods
-    private void run() {
+    	//METHODS
+    
+    /**
+     * Methods for solving the task by choosing actions uniformly at random
+     * @param ouputFileName
+     */
+    
+    private void runRandom(Simulator simulator) {
+    	boolean finished = false;
+    	Random rand = new Random();
+    	Action action = null;
+    	int step = maxNumberOfTimeSteps;
+    	while(!finished) {
+    		int actionIndex = rand.nextInt(numberOfActions);
+    		if(actionIndex==0) {
+    			ActionType a = ActionType.MOVE;
+    			action = new Action(a);
+    		}
+    		else if(actionIndex == 1) {
+    			ActionType a = ActionType.CHANGE_CAR;
+        		int carIndex = rand.nextInt(numberOfCarTypes);
+        		String car = cars.get(carIndex);
+        		action = new Action(a, car);
+    		}
+    		else if(actionIndex == 2) {
+    			ActionType a = ActionType.CHANGE_DRIVER;
+        		int index = rand.nextInt(numberOfDrivers);
+        		String driver = drivers.get(index);
+        		action = new Action(a, driver);
+    		}
+    		else {
+    			ActionType a = ActionType.CHANGE_TIRES;
+        		int index = rand.nextInt(numberOfDrivers);
+        		Tire tire = tires.get(index);
+        		action = new Action(a, tire);
+    		}
+    		currentState = simulator.step(action);
+    		step--;
+    		System.out.println(maxNumberOfTimeSteps-step);
+    		if(simulator.isGoalState(currentState) || step ==0 ) {
+    			finished = true;
+    			
+    		}
+    	}
+
+    	
+    }
+    
+    
+    
+    /**
+     * Method for solving the task in a smart way
+     * @param ouputFileName
+     */
+    private void run(String outputFileName) {
+       
        
     }
+    
+
  
  
    

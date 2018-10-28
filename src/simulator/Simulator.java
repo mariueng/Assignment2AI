@@ -186,6 +186,7 @@ public class Simulator {
 
         // Sample move distance
         int moveDistance = sampleMoveDistance();
+        System.out.println("moving: " + moveDistance);
 
         // handle slip and breakdown cases, addition of steps handled in step method
         if (moveDistance == ProblemSpec.SLIP) {
@@ -225,12 +226,18 @@ public class Simulator {
     private int sampleMoveDistance() {
 
         double[] moveProbs = getMoveProbs();
-
+        String probs = "";
+        for(Double d:moveProbs) {
+        	probs = probs + d + ", ";
+        }
+        System.out.println(probs);
         double p = Math.random();
+        System.out.println("p: " + p);
         double pSum = 0;
         int move = 0;
         for (int k = 0; k < ProblemSpec.CAR_MOVE_RANGE; k++) {
             pSum += moveProbs[k];
+            
             if (p <= pSum) {
                 move = ps.convertIndexIntoMove(k);
                 break;
