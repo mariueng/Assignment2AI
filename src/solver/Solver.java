@@ -36,14 +36,15 @@ public class Solver {
      * @param ouputFileName
      */
     private void runMCTS(ProblemSpec ps) {
-    	State currentState = State.getStartState(ps.getFirstCarType(), 
-    			ps.getFirstDriver(), ps.getFirstTireModel());
-    	boolean isFinished = false;
+		List<Action> actionsTaken = new ArrayList<>(); //list of the total actions taken. Each action is decided by one iteration of MCTS (14 sec)
+    	State currentState = State.getStartState(ps.getFirstCarType(), ps.getFirstDriver(), ps.getFirstTireModel());
+    	boolean isFinished = false; //complete problem is not finished
     	
     	while(!isFinished) { //outer loop. Run til complete problem is solved
 	    	MCTS mcts = new MCTS(ps, currentState);
 	    	Action a = mcts.runMCTS(); // Action to be taken in this iteration. Each iteration lasts 14 sec.
 	    	currentState = sim.step(a);
+	    	actionsTaken.add(a);
 	    }
 	    
     }

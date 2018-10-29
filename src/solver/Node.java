@@ -15,12 +15,18 @@ public class Node {
 	private double ucbValue;
 	private int numberOfTimesVisited; //how many times have we visited this node. Only interesting for the root's children
 	private State nodeState;
-	private boolean isLeafNode;
 	private boolean isTerminalState;
 	private final int explConstant = 2; //This constant can be changed if needs be
-	private List<Node> children;
+	private List<Node> children = new ArrayList<>();
+	private double probability; //only a field for A1-nodes
 	
-	//constructor
+	//constructor for root node
+	public Node(State state) {
+		this.depth = 0;
+		this.totalScore = 0;
+	}
+	
+	//constructor for treeNode
 	public Node(Node parent, Action prevAction, State state) {
 		this.parentNode = parent;
 		this.prevAction = prevAction;
@@ -32,16 +38,21 @@ public class Node {
 		parent.children.add(this);
 		
 	}
-	
-	//constructor for root node
-	public Node(State state) {
-		this(null, null, state);
-		this.depth = 0;
+	//constructor for treeNode that has prevAction A1
+	public Node(Node parent, State state, double probability) {
+		this.probability = probability; //probability for ending up in this node after taken an A1 action in the parent node
+		this.parentNode = parent;
+		this.nodeState = state;
+		this.depth = parent.depth+1;
 		this.totalScore = 0;
+		this.numberOfTimesVisited = 0;
+		this.children = new ArrayList<Node>();
+		parent.children.add(this);
 		
 	}
 	
-	//constructor for simulated nodes
+	
+	//constructor for simulated node
 	public Node(Node supernode, State state) {
 		this(supernode, null, state);
 		this.children = null;
@@ -97,9 +108,6 @@ public class Node {
 		return totalScore;
 	}
 
-	public boolean isLeafNode() {
-		return isLeafNode;
-	}
 
 	public boolean isTerminalState() {
 		return isTerminalState;
