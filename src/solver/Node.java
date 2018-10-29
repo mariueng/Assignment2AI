@@ -1,12 +1,15 @@
 package solver;
-import problem.*;
-import simulator.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TreeNode {
+import problem.Action;
+import simulator.State;
+
+public class Node {
 	
 	//fields
 	private Action prevAction;
-	private TreeNode parentNode;
+	private Node parentNode;
 	private int depth;
 	private double totalScore; //accumalated total score
 	private double ucbValue;
@@ -15,23 +18,33 @@ public class TreeNode {
 	private boolean isLeafNode;
 	private boolean isTerminalState;
 	private final int explConstant = 2; //This constant can be changed if needs be
+	private List<Node> children;
 	
 	//constructor
-	public TreeNode(TreeNode parent, Action prevAction, State state) {
+	public Node(Node parent, Action prevAction, State state) {
 		this.parentNode = parent;
 		this.prevAction = prevAction;
 		this.nodeState = state;
 		this.depth = parent.depth+1;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
+		this.children = new ArrayList<Node>();
+		parent.children.add(this);
+		
 	}
 	
 	//constructor for root node
-	public TreeNode(State state) {
+	public Node(State state) {
 		this(null, null, state);
 		this.depth = 0;
 		this.totalScore = 0;
 		
+	}
+	
+	//constructor for simulated nodes
+	public Node(Node supernode, State state) {
+		this(supernode, null, state);
+		this.children = null;
 	}
 	
 	//methods
@@ -42,6 +55,8 @@ public class TreeNode {
 		this.ucbValue = totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
 	}
 
+	//getters and setters
+	
 	public double getUcbValue() {
 		return ucbValue;
 	}
@@ -70,7 +85,7 @@ public class TreeNode {
 		return prevAction;
 	}
 
-	public TreeNode getParentNode() {
+	public Node getParentNode() {
 		return parentNode;
 	}
 
@@ -90,8 +105,9 @@ public class TreeNode {
 		return isTerminalState;
 	}
 	
-	//getters
-
+	public List<Node> getChildren() {
+		return children;
+	}
 	
 	//Main for testing
 

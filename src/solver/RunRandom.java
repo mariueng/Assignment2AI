@@ -1,22 +1,23 @@
 package solver;
 
-import problem.*;
-import simulator.*;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Random;
 
-public class MCTS {
+import problem.*;
+import simulator.*;
+
+public class RunRandom {
 	
 	//fields
+	private Simulator sim;
 	private List<Node> treeNodes;
 	private ProblemSpec ps;
     private int goalIndex; //N
     private Level level;
     private int maxNumberOfTimeSteps;
     private State currentState;
-    private State rootState;
     private int slipTimePenalty;
     private int breakdownTimePenalty;
     private double discountFactor;
@@ -40,8 +41,7 @@ public class MCTS {
                                     //first terrain type and first car type. Second: first terrain type, second car type, etc.
    
 	
-	//constructor
-	public MCTS(ProblemSpec ps, State rootState) {
+	public RunRandom(ProblemSpec ps, String outputFile) {
 		this.ps = ps;
         this.breakdownTimePenalty=ps.getRepairTime();
         this.slipTimePenalty = ps.getSlipRecoveryTime();
@@ -63,86 +63,52 @@ public class MCTS {
         this.discountFactor = ps.getDiscountFactor();
         this.goalIndex = ps.getN();
         this.maxNumberOfTimeSteps = ps.getMaxT();
-        this.rootState = rootState; //current state. The state where we want to perform an action from
-	}
-	
-	//methods
-	
-	public Action runMCTS() {
-		// running time is limited to 15 seconds per action
-    	long start = System.currentTimeMillis();
-    	long end = start;
-		
-		List<Action> actionsTaken = new ArrayList<>();
-		Action action = null;
-		
-		while (end < start + 14000) {
-			
-			// Selection
-			select();
-			
-			// Expansion
-			expand(Node node);
-			
-			// Simulation
-			simulate();
-			
-			// Backpropagation
-			backProgagate(0.0);
-			
-		}
-		
-		
-		
-		return action;
-		
+        this.currentState = State.getStartState(ps.getFirstCarType(), ps.getFirstDriver(), ps.getFirstTireModel());
+        this.sim = new Simulator(ps, outputFile);
+        run();
 	}
 	
 	/**
-	 * PHASE 1 - Selects the most promising node according to 
-	 * calculated UCB score
-	 * @param 
-	 * @return
-	 */
-	private void select() {
-		
-	}
-	
-	/**
-	 * PHASE 2 - Expands the node
-	 */
-	private void expand(Node node) {
-		if (node.getNumberOfTimesVisited() == 0) {
-			return;
-		} else {
-			generateChildren(node);
-		}
-		
-	}
-	
-	private void generateChildren(Node node) {
-		for ()
-	}
-	
-	/**
-	 * PHASE 3 - Simulates a random rollout
-	 */
-	private void simulate() {
-		boolean terminalNodeFound = false;
-		while(!terminalNodeFound) {
-			
-		}
-	}
-	
-	/**
-	 * PHASE 4 - Backpropagates rollout to all parent nodes
-	 */
-	private void backProgagate(double value) {
-		
-	}
-	
-	//Main for testing
-	public static void main(String[] args) {
-		
-	}
+     * Methods for solving the task by choosing actions uniformly at random
+     * @param ouputFileName
+     */
+    
+    private void run() {
+    	boolean finished = false;
+    	Random rand = new Random();
+    	Action action = null;
+    	int step = maxNumberOfTimeSteps;
+    	while(!finished) {
+    		int actionIndex = rand.nextInt(numberOfActions);
+    		if(actionIndex==0) {
+    			ActionType a = ActionType.MOVE;
+    			action = new Action(a);
+    		}
+    		else if(actionIndex == 1) {
+    			ActionType a = ActionType.CHANGE_CAR;
+        		int carIndex = rand.nextInt(numberOfCarTypes);
+        		String car = cars.get(carIndex);
+        		action = new Action(a, car);
+    		}
+    		else if(actionIndex == 2) {
+    			ActionType a = ActionType.CHANGE_DRIVER;
+        		int index = rand.nextInt(numberOfDrivers);
+        		String driver = drivers.get(index);
+        		action = new Action(a, driver);
+    		}
+    		else {
+    			ActionType a = ActionType.CHANGE_TIRES;
+        		int index = rand.nextInt(numberOfDrivers);
+        		Tire tire = tires.get(index);
+        		action = new Action(a, tire);
+    		}
+    		currentState = sim.step(action);
+    		step--;
+    		System.out.println(maxNumberOfTimeSteps-step);
+    		if(sim.isGoalState(currentState) || step ==0 ) {
+    			finished = true;
+    			
+    		}
+    	}
+    }
 }
