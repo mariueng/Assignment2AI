@@ -125,6 +125,10 @@ public class Node {
 		return children;
 	}
 	
+	public void addChild(Node node) {
+		children.add(node);
+	}
+	
 	//Main for testing
 
 }

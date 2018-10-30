@@ -17,7 +17,6 @@ public class MCTS {
 	
 	//fields
 	private ProblemSpec ps;
-	private List<Node> treeNodes;
     private int goalIndex; //N
     private Level level;
     private int maxNumberOfTimeSteps;
@@ -50,7 +49,6 @@ public class MCTS {
                                     //first terrain type and first car type. Second: first terrain type, second car type, etc.
     
     private ArrayList<Double> utilities = new ArrayList<>(); //list of accumulated utilites for each action(Aactiontype, parameter). Size: numberOfPossibleActions
-    private ArrayList<Node> nodes = new ArrayList<>(); //list of all nodes in the MCTS-tree. NB. does not contain nodes/states genereted in the simulate-step of the inner loop.
     private Node rootNode;  //rootNode. Made from the state we want to use MCTS to find the best action from
     
 	//constructor
@@ -88,14 +86,16 @@ public class MCTS {
     	long start = System.currentTimeMillis();
     	long end = start;
 
-		generateChildren(rootNode); //means basiacallly: make a node for each possible action(actiontype, outcome/parameter) from rootNode
-		nodes.add(rootNode);
+		expand(rootNode); //means basiacallly: make a node for each possible action(actiontype, outcome/parameter) from rootNode
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
+			// Expansion
+			if (selectedNode.getNumberOfTimesVisited() > 0) {
+				 selectedNode = expand(selectedNode);
+			}
 			// Simulation
 			double reward = rollout(selectedNode);
-			
 			// Backpropagation
 			backProgagate(selectedNode, reward);
 			
@@ -114,7 +114,7 @@ public class MCTS {
 	 */
 	private Node select() {
 		Node result = null; //the node you want to expand/rollout. Is it has never been visited before, go directly to rollout
-		Node currentNode = nodes.get(0); //rootNode
+		Node currentNode = this.rootNode;
 		while(true) {
 			boolean isLeafNode;
 			if(currentNode.getChildren().size()==0) {
@@ -126,8 +126,7 @@ public class MCTS {
 				if(visited == 0) {
 					result = currentNode;
 					break; //first time we visit a leafnode -> rollout
-				}else { 
-					generateChildren(currentNode); //second time we visit a leafnode -> expand (phase 2)
+				}else if ( visited == 1){ 
 					result = currentNode.getChildren().get(0); //we want to rollout the first element of the new children
 					break;
 				}
@@ -145,32 +144,35 @@ public class MCTS {
 	}
 
 	
-	//method for generating node-children (step 2 in original MCTS)
-	private void generateChildren(Node node) { //generate children nodes for each available action(Action type, outcome/parameter) of a parent node
+	/**
+	 * PHASE 2 - Expansion
+	 * @param node
+	 * @return
+	 */
+	private Node expand(Node node) { //generate children nodes for each available action(Action type, outcome/parameter) of a parent node
 		ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
-		for(Action action :actionSpace) {
+		for(Action action : actionSpace) {
 			if(action.getActionType()==ActionType.MOVE) {
 				for(int k=-4; k<7;k++) { //add childnode for each k, when action = A1
 					MCTSStateSimulator sim = new MCTSStateSimulator(node, k);
 					double prob = sim.getProbability();
 					State state = sim.returnState();
 					Node childNode = new Node(node, state, prob);
-					nodes.add(childNode);
 				}
 			}
 			else {
 				MCTSStateSimulator sim = new MCTSStateSimulator(node, action);
 				State state = sim.returnState();
-				Node chilNode = new Node(node, action, state);
-				nodes.add(chilNode); //node added to MCTS-tree
+				Node childNode = new Node(node, action, state);
 			}
 		}
+		return node.getChildren().get(0);
 	}
 	
 
 	
 	/**
-	 * PHASE 2 - Simulates a random rollout
+	 * PHASE 3 - Simulates a random rollout
 	 */
 	private double rollout(Node node) {
 		Node currentNode = node; //Randomly generated child node from prevoious currentNode
@@ -197,7 +199,7 @@ public class MCTS {
 	}
 	
 	/**
-	 * PHASE 3 - Backpropagates rollout to all parent nodes
+	 * PHASE 4 - Backpropagates rollout to all parent nodes
 	 * NB: remember to plus 1 to numberOfVisited to all "parents"!
 	 */
 	private void backProgagate(Node superNode, double reward) {
