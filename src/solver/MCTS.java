@@ -51,9 +51,11 @@ public class MCTS {
     
     private ArrayList<Double> utilities = new ArrayList<>(); //list of accumulated utilites for each action(Aactiontype, parameter). Size: numberOfPossibleActions
     private ArrayList<Node> nodes = new ArrayList<>(); //list of all nodes in the MCTS-tree. NB. does not contain nodes/states genereted in the simulate-step of the inner loop.
-	
+    private Node rootNode;  //rootNode. Made from the state we want to use MCTS to find the best action from
+    
 	//constructor
 	public MCTS(ProblemSpec ps, State rootState) {
+		this.rootNode = new Node(rootState);
 		this.ps = ps;
         this.breakdownTimePenalty=ps.getRepairTime();
         this.slipTimePenalty = ps.getSlipRecoveryTime();
@@ -85,21 +87,20 @@ public class MCTS {
 	public Action runMCTS() { //delivere one action after 14 seconds of MCTS-inner loops
     	long start = System.currentTimeMillis();
     	long end = start;
-		Node rootNode = new Node(rootState); //rootNode. Made from the state we want to use MCTS to find the best action from
+
 		generateChildren(rootNode); //means basiacallly: make a node for each possible action(actiontype, outcome/parameter) from rootNode
 		nodes.add(rootNode);
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
-			
 			// Simulation
-			Node terminalNode = rollout(selectedNode);
+			double reward = rollout(selectedNode);
 			
 			// Backpropagation
-			backProgagate(0.0);
+			backProgagate(selectedNode, reward);
 			
 		}
-		//makeUtilities();
+		makeUtilities();
 		int index = utilities.indexOf(Collections.max(utilities)); //index value of the best action from rootNode
 		Action action = rootActionSpace.get(index);
 		return action;
@@ -171,37 +172,62 @@ public class MCTS {
 	/**
 	 * PHASE 2 - Simulates a random rollout
 	 */
-	private Node rollout(Node node) {
-		Node terminalNode = null;
-		boolean terminalNodeFound = false;
-		Node superNode = node; //the node we want to rollout from
-		Node currentNode = node;
-		while(!terminalNodeFound) {
+	private double rollout(Node node) {
+		Node currentNode = node; //Randomly generated child node from prevoious currentNode
+		double reward = 0;
+		while(true) {
 			Random rand = new Random();
 			ArrayList<Action> actionSpace = makeActionSpace(currentNode.getNodeState());
-			int actionIndexForRandomAction = rand.nextInt(actionSpace.size());
+			int actionIndexForRandomAction = rand.nextInt(actionSpace.size()); //use heuristic so that the action is not random? Notice that A1 has the twelve first actions, so the chance of hitting A1 is bigger than the other
 			Action action = actionSpace.get(actionIndexForRandomAction);
 			MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
 			State state = sim.returnState();
 			int timeStep = sim.getTimeStepNumber();
-			currentNode = new Node(superNode, state);
-			if(currentNode.getNodeState().getPos() == goalIndex || timeStep >= maxNumberOfTimeSteps) {
-				terminalNodeFound = true;
+			currentNode = new Node(currentNode, state);
+			if(currentNode.getNodeState().getPos() == goalIndex) { //found goal
+				reward += 100/timeStep; //finding goalstate in 1 action should be better than finding it after 10 actions
+				return reward;
 			}
-			terminalNode = currentNode;
+			else if(timeStep >= maxNumberOfTimeSteps) { //did not find goal
+				return reward; //return 0 because the terminal state was a failure
+			}
+			
 			
 		}
-		return terminalNode;
 	}
 	
 	/**
-	 * PHASE 4 - Backpropagates rollout to all parent nodes
+	 * PHASE 3 - Backpropagates rollout to all parent nodes
 	 * NB: remember to plus 1 to numberOfVisited to all "parents"!
 	 */
-	private void backProgagate(double value) {
-		
+	private void backProgagate(Node superNode, double reward) {
+		Node currentNode = superNode;
+		while(!(currentNode==null)) {
+			int prevNumberOfTimesVisited = currentNode.getNumberOfTimesVisited();
+			currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited
+			double prevTotalScore = currentNode.getTotalScore();
+			currentNode.setTotalScore(prevTotalScore + reward); //update total score
+			currentNode.calculateUcbScore(); //update ucb-score
+			currentNode = currentNode.getParentNode();
+		}
 	}
 	
+	
+	//METHOD FOR MAKING UTILITIES
+	//Used when MCTS has completed it's 14 seconds of running a
+	private void makeUtilities() {
+		double a1Utility =  0;
+		ArrayList<Node> actions = (ArrayList<Node>) this.rootNode.getChildren();
+		for(int i = 0;i<12;i++) {
+			Node kNode = actions.get(i);
+			double kNodeValue = kNode.getTotalScore()*kNode.getProbability(); //scaling down value with the probability of actually getting intoo that node
+			a1Utility += kNodeValue;
+		}
+		utilities.add(a1Utility);
+		for(int j = 12;j<rootActionSpace.size();j++) {
+			utilities.add(rootNode.getChildren().get(j).getTotalScore());
+		}
+	}
 	
 	//Make actionSpace for a state.  
 	private ArrayList<Action> makeActionSpace(State state){
@@ -270,7 +296,7 @@ public class MCTS {
 			}
 		}
 		return actionSpace;
-	} //end of method "makeRootActionSpace
+	} //end of method makeActionSpace
 	
 	
 	//Main for testing

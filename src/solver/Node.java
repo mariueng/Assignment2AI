@@ -84,6 +84,10 @@ public class Node {
 		this.numberOfTimesVisited = numberOfTimesVisited;
 	}
 
+	public void setTotalScore(double totalScore) {
+		this.totalScore = totalScore;
+	}
+	
 	public State getNodeState() {
 		return nodeState;
 	}
@@ -102,6 +106,10 @@ public class Node {
 
 	public int getDepth() {
 		return depth;
+	}
+	
+	public double getProbability() {
+		return probability;
 	}
 
 	public double getTotalScore() {

@@ -14,7 +14,8 @@ public class Main {
 
             ps = new ProblemSpec(inputFileName);
             String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\solvedOutput_lvl1.txt";
-            Solver solver = new Solver(ps, outputFileName);
+            char c = 'M';
+            Solver solver = new Solver(ps, outputFileName, c);
         } catch (IOException e) {
             System.out.println("IO Exception occurred");
             System.exit(1);
