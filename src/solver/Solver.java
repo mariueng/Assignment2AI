@@ -15,6 +15,8 @@ public class Solver {
 	private ProblemSpec ps;
 	private String outputFileName;
 	private Simulator sim;
+	public static int slipRecoveryTime;
+	public static int repairTime;
    
     //constructor
     public Solver(ProblemSpec ps, String outputFileName, char c) {
@@ -39,12 +41,23 @@ public class Solver {
 		List<Action> actionsTaken = new ArrayList<>(); //list of the total actions taken. Each action is decided by one iteration of MCTS (14 sec)
     	State currentState = State.getStartState(ps.getFirstCarType(), ps.getFirstDriver(), ps.getFirstTireModel());
     	boolean isFinished = false; //complete problem is not finished
+    	int rootNodeTimeStep = 0;
     	
     	while(!isFinished) { //outer loop. Run til complete problem is solved
-	    	MCTS mcts = new MCTS(ps, currentState);
+	    	MCTS mcts = new MCTS(ps, currentState, rootNodeTimeStep);
 	    	Action a = mcts.runMCTS(); // Action to be taken in this iteration. Each iteration lasts 14 sec.
 	    	currentState = sim.step(a);
 	    	actionsTaken.add(a);
+	    	rootNodeTimeStep = mcts.getCurrentTimeStep();
+	    	if(currentState.isInBreakdownCondition()) {
+	    		rootNodeTimeStep += repairTime;
+	    	}
+	    	else if(currentState.isInSlipCondition()) {
+	    		rootNodeTimeStep += slipRecoveryTime;
+	    	} else {
+	    		rootNodeTimeStep++;
+	    	}
+	    	
 	    }
 	    
     }

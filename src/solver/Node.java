@@ -5,7 +5,7 @@ import java.util.List;
 import problem.Action;
 import simulator.State;
 
-public class Node {
+public class Node implements Comparable<Node>{
 	
 	private final static int bigValue = 100000;
 	
@@ -17,19 +17,19 @@ public class Node {
 	private double ucbValue;
 	private int numberOfTimesVisited; //how many times have we visited this node. Only interesting for the root's children
 	private State nodeState;
-	private boolean isTerminalState;
 	private final int explConstant = 2; //This constant can be changed if needs be
 	private List<Node> children = new ArrayList<>();
-
+	private int timeStep;
 	
 	//constructor for root node
-	public Node(State state) {
+	public Node(State state, int rootTimeStep) {
 		this.parentNode = null;
 		this.prevAction = null;
 		this.nodeState = state;
 		this.depth = 0;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
+		this.timeStep = rootTimeStep;
 		this.ucbValue = bigValue;
 		this.depth = 0;
 		this.totalScore = 0;
@@ -38,15 +38,20 @@ public class Node {
 	//constructor for treeNode
 	public Node(Node parent, Action prevAction, State state) {
 		this.parentNode = parent;
-		System.out.println("Parent satt: "+ parentNode);
 		this.prevAction = prevAction;
 		this.nodeState = state;
 		this.depth = parent.depth+1;
-		System.out.println("Depth: " + depth);
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
+		if(state.isInBreakdownCondition()) {
+			this.timeStep += Solver.repairTime;
+		}
+		else if(state.isInSlipCondition()) {
+			this.timeStep += Solver.slipRecoveryTime;
+		} else {
+			this.timeStep++;
+		}
 		this.ucbValue = bigValue;
-		parent.addChild(this);;
 		
 	}
 
@@ -114,10 +119,6 @@ public class Node {
 		return totalScore;
 	}
 
-
-	public boolean isTerminalState() {
-		return isTerminalState;
-	}
 	
 	public List<Node> getChildren() {
 		return children;
@@ -142,7 +143,16 @@ public class Node {
 		result += "\n with " + getNodeState();
 		return result;
 	}
+
+	@Override
+	public int compareTo(Node other) {
+		return Double.compare(this.getUcbValue(), other.getUcbValue());
+	}
 	
+	//getTimeStep
+	public int getTimeStep() {
+		return timeStep;
+	}
 
 
 	

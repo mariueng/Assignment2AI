@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 
+import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBaseIterators.ChildrenIterator;
+
 
 public class MCTS {
 	
@@ -49,10 +51,13 @@ public class MCTS {
     
     private ArrayList<Double> utilities = new ArrayList<>(); //list of accumulated utilites for each action(Aactiontype, parameter). Size: numberOfPossibleActions
     private Node rootNode;  //rootNode. Made from the state we want to use MCTS to find the best action from
+    private OwnSimulator simulator;
+    private int rootNodeTimeStep;
     
 	//constructor
-	public MCTS(ProblemSpec ps, State rootState) {
-		this.rootNode = new Node(rootState);
+	public MCTS(ProblemSpec ps, State rootState, int rootNodeTimeStep) {
+		this.rootNodeTimeStep = rootNodeTimeStep;
+		this.rootNode = new Node(rootState, rootNodeTimeStep);
 		this.ps = ps;
         this.breakdownTimePenalty=ps.getRepairTime();
         this.slipTimePenalty = ps.getSlipRecoveryTime();
@@ -84,7 +89,7 @@ public class MCTS {
 	public Action runMCTS() { //delivere one action after 14 seconds of MCTS-inner loops
     	long start = System.currentTimeMillis();
     	long end = start;
-		
+		simulator = new OwnSimulator(ps);
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
@@ -96,6 +101,7 @@ public class MCTS {
 			backProgagate(selectedNode, reward);
 			
 		}
+		
 		makeUtilities();
 		int index = utilities.indexOf(Collections.max(utilities)); //index value of the best action from rootNode
 		Action action = rootActionSpace.get(index);
@@ -118,12 +124,8 @@ public class MCTS {
 			}
 			// if not, choose the child node of current that maximises UCB
 			else {
-				ArrayList<Double> ucbValuesForChildren = new ArrayList<>();
-				for(Node n:currentNode.getChildren()) {
-					ucbValuesForChildren.add(n.getUcbValue());
-				}
-				int index = ucbValuesForChildren.indexOf(Collections.max(ucbValuesForChildren));
-				currentNode = currentNode.getChildren().get(index);
+				Collections.sort(currentNode.getChildren());
+				currentNode = currentNode.getChildren().get(0);
 			}
 		}
 	}
@@ -140,26 +142,29 @@ public class MCTS {
 			return node;
 		} else {
 			// generate children nodes for each available 
-			// action(Action type, outcome/parameter) of a parent node
-			ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
-			for (Action action : actionSpace) {
-				if (action.getActionType() == ActionType.MOVE) {
-					for (int k = -4; k < 7; k++) { 
-						//add childnode for each k, when action = A1
-						MCTSStateSimulator sim = new MCTSStateSimulator(node, k);
-						double prob = sim.getProbability();
-						State state = sim.returnState();
-						Node childNode = new A1Node(node, state, prob);
-					}
-				}
-				else {
-					MCTSStateSimulator sim = new MCTSStateSimulator(node, action);
-					State state = sim.returnState();
-					Node childNode = new Node(node, action, state);
-				}
-			}
+			generateChildren(node);
 		}
 		return node.getChildren().get(0);
+	}
+	
+	// helper method for generating all children of a node
+	private void generateChildren(Node node) {
+		ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
+		
+		for (Action action : actionSpace) {
+			if (action.getActionType() == ActionType.MOVE) {
+				for (int k = -4; k < 7; k++) { 
+					//add childnode for each k, when action = A1
+					State state = StateMaker.getNextA1State(node, k);
+					double prob = StateMaker.calculateProbability(node, k);
+					Node childNode = new A1Node(node, state, prob);
+				}
+			}
+			else {
+				State state = MCTSStateSimulator.getNextState(node, action);
+				Node childNode = new Node(node, action, state);
+			}
+		}
 	}
 	
 
@@ -170,7 +175,7 @@ public class MCTS {
 	private double rollout(Node node) {
 		Node currentNode = node; //Randomly generated child node from prevoious currentNode
 		double reward = 0;
-		int timeStep = 0;
+		int timeStep = node.getTimeStep();
 		while(true) {
 			Random rand = new Random();
 			ArrayList<Action> actionSpace = makeActionSpace(currentNode.getNodeState());
@@ -179,9 +184,7 @@ public class MCTS {
 			System.out.println("Choose action: " + action.getActionType());
 			System.out.println("Rollout: "+ currentNode);
 			if(action.getActionType()==ActionType.MOVE) {
-				MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
-				double probability = sim.getProbability(); //
-				State state = sim.returnState();
+				State state = MCTSStateSimulator.getNextA1RolloutState(currentNode);
 				timeStep = sim.getTimeStepNumber();
 				currentNode = new A1Node(currentNode, state, probability);
 				System.out.println("Next rollout is: " + currentNode);
@@ -307,6 +310,10 @@ public class MCTS {
 	} //end of method makeActionSpace
 	
 	
+	//getTimeStepForRootNode
+	public int getCurrentTimeStep() {
+		return rootNodeTimeStep;
+	}
 	//Main for testing
 	public static void main(String[] args) {
 		
