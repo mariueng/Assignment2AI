@@ -39,6 +39,7 @@ public class MCTSStateSimulator {
 		
 		return result;
 	}
+
 	
 	/**
 	 * Method for getting the probability for a given k from given parentNode
@@ -66,5 +67,5 @@ public class MCTSStateSimulator {
 	}
 	
 	//Main for testing
-
+	
 }

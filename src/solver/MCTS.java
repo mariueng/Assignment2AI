@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 
-import com.sun.javafx.binding.SelectBinding.AsLong;
 
 public class MCTS {
 	
@@ -85,15 +84,13 @@ public class MCTS {
 	public Action runMCTS() { //delivere one action after 14 seconds of MCTS-inner loops
     	long start = System.currentTimeMillis();
     	long end = start;
-
-		expand(rootNode); //means basiacallly: make a node for each possible action(actiontype, outcome/parameter) from rootNode
+		
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
+			System.out.println(selectedNode);
 			// Expansion
-			if (selectedNode.getNumberOfTimesVisited() > 0) {
-				 selectedNode = expand(selectedNode);
-			}
+			selectedNode = expand(selectedNode);
 			// Simulation
 			double reward = rollout(selectedNode);
 			// Backpropagation
@@ -113,25 +110,15 @@ public class MCTS {
 	 * @return
 	 */
 	private Node select() {
-		Node result = null; //the node you want to expand/rollout. Is it has never been visited before, go directly to rollout
-		Node currentNode = this.rootNode;
+		Node currentNode = this.rootNode; // the node to expand/rollout
 		while(true) {
-			boolean isLeafNode;
-			if(currentNode.getChildren().size()==0) {
-				isLeafNode = true;
-			}else {isLeafNode = false;}
 			
-			if(isLeafNode) {//currentnode is a leaf node
-				int visited = currentNode.getNumberOfTimesVisited();
-				if(visited == 0) {
-					result = currentNode;
-					break; //first time we visit a leafnode -> rollout
-				}else if ( visited == 1){ 
-					result = currentNode.getChildren().get(0); //we want to rollout the first element of the new children
-					break;
-				}
+			// check whether the current node is a leaf node
+			if(currentNode.getChildren().size() == 0) {
+				return currentNode;
 			}
-			else { //not leaf node
+			// if not, choose the child node of current that maximises UCB
+			else {
 				ArrayList<Double> ucbValuesForChildren = new ArrayList<>();
 				for(Node n:currentNode.getChildren()) {
 					ucbValuesForChildren.add(n.getUcbValue());
@@ -140,7 +127,6 @@ public class MCTS {
 				currentNode = currentNode.getChildren().get(index);
 			}
 		}
-		return result;
 	}
 
 	
@@ -149,21 +135,29 @@ public class MCTS {
 	 * @param node
 	 * @return
 	 */
-	private Node expand(Node node) { //generate children nodes for each available action(Action type, outcome/parameter) of a parent node
-		ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
-		for(Action action : actionSpace) {
-			if(action.getActionType()==ActionType.MOVE) {
-				for(int k=-4; k<7;k++) { //add childnode for each k, when action = A1
-					MCTSStateSimulator sim = new MCTSStateSimulator(node, k);
-					double prob = sim.getProbability();
-					State state = sim.returnState();
-					Node childNode = new Node(node, state, prob);
+	private Node expand(Node node) { 
+		int visited = node.getNumberOfTimesVisited();
+		if (visited == 0) {
+			return node;
+		} else {
+			// generate children nodes for each available 
+			// action(Action type, outcome/parameter) of a parent node
+			ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
+			for (Action action : actionSpace) {
+				if (action.getActionType() == ActionType.MOVE) {
+					for (int k = -4; k < 7; k++) { 
+						//add childnode for each k, when action = A1
+						MCTSStateSimulator sim = new MCTSStateSimulator(node, k);
+						double prob = sim.getProbability();
+						State state = sim.returnState();
+						Node childNode = new Node(node, state, prob);
+					}
 				}
-			}
-			else {
-				MCTSStateSimulator sim = new MCTSStateSimulator(node, action);
-				State state = sim.returnState();
-				Node childNode = new Node(node, action, state);
+				else {
+					MCTSStateSimulator sim = new MCTSStateSimulator(node, action);
+					State state = sim.returnState();
+					Node childNode = new Node(node, action, state);
+				}
 			}
 		}
 		return node.getChildren().get(0);
@@ -186,6 +180,7 @@ public class MCTS {
 			State state = sim.returnState();
 			int timeStep = sim.getTimeStepNumber();
 			currentNode = new Node(currentNode, state);
+			System.out.println(currentNode);
 			if(currentNode.getNodeState().getPos() == goalIndex) { //found goal
 				reward += 100/timeStep; //finding goalstate in 1 action should be better than finding it after 10 actions
 				return reward;

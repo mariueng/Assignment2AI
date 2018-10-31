@@ -7,6 +7,8 @@ import simulator.State;
 
 public class Node {
 	
+	private final static int bigValue = 100000;
+	
 	//fields
 	private Action prevAction;
 	private Node parentNode;
@@ -18,10 +20,17 @@ public class Node {
 	private boolean isTerminalState;
 	private final int explConstant = 2; //This constant can be changed if needs be
 	private List<Node> children = new ArrayList<>();
-	private double probability; //only a field for A1-nodes
+	private double probability = 0.0; //only a field for A1-nodes
 	
 	//constructor for root node
 	public Node(State state) {
+		this.parentNode = null;
+		this.prevAction = null;
+		this.nodeState = state;
+		this.depth = 0;
+		this.totalScore = 0;
+		this.numberOfTimesVisited = 0;
+		this.ucbValue = bigValue;
 		this.depth = 0;
 		this.totalScore = 0;
 	}
@@ -34,7 +43,7 @@ public class Node {
 		this.depth = parent.depth+1;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
-		this.children = new ArrayList<Node>();
+		this.ucbValue = bigValue;
 		parent.children.add(this);
 		
 	}
@@ -46,7 +55,7 @@ public class Node {
 		this.depth = parent.depth+1;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
-		this.children = new ArrayList<Node>();
+		this.ucbValue = bigValue;
 		parent.children.add(this);
 		
 	}
@@ -63,6 +72,9 @@ public class Node {
 
 	
 	public void calculateUcbScore() {
+		if (numberOfTimesVisited == 0) {
+			this.ucbValue = bigValue;
+		}
 		this.ucbValue = totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
 	}
 
@@ -127,6 +139,22 @@ public class Node {
 	
 	public void addChild(Node node) {
 		children.add(node);
+	}
+	
+	public String toString() {
+		String result = "(Node type: ";
+		if (this.probability == 0.0) {
+			if (this.parentNode == null) {
+				result += "root | ";
+			} else {
+				result += "A2-A6 | ";
+			}
+		} else {
+			result += "A1 | p: " + probability + " | ";
+		}
+		result += "d: " + depth + " | s: " + totalScore + " | UCB: " + ucbValue + " | n: " + numberOfTimesVisited +")";
+		result += "\n with " + getNodeState();
+		return result;
 	}
 	
 	//Main for testing
