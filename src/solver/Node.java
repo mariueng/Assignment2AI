@@ -20,7 +20,7 @@ public class Node {
 	private boolean isTerminalState;
 	private final int explConstant = 2; //This constant can be changed if needs be
 	private List<Node> children = new ArrayList<>();
-	private double probability = 0.0; //only a field for A1-nodes
+
 	
 	//constructor for root node
 	public Node(State state) {
@@ -38,28 +38,18 @@ public class Node {
 	//constructor for treeNode
 	public Node(Node parent, Action prevAction, State state) {
 		this.parentNode = parent;
+		System.out.println("Parent satt: "+ parentNode);
 		this.prevAction = prevAction;
 		this.nodeState = state;
 		this.depth = parent.depth+1;
+		System.out.println("Depth: " + depth);
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
 		this.ucbValue = bigValue;
-		parent.children.add(this);
+		parent.addChild(this);;
 		
 	}
-	//constructor for treeNode that has prevAction A1
-	public Node(Node parent, State state, double probability) {
-		this.probability = probability; //probability for ending up in this node after taken an A1 action in the parent node
-		this.parentNode = parent;
-		this.nodeState = state;
-		this.depth = parent.depth+1;
-		this.totalScore = 0;
-		this.numberOfTimesVisited = 0;
-		this.ucbValue = bigValue;
-		parent.children.add(this);
-		
-	}
-	
+
 	
 	//constructor for simulated node
 	public Node(Node supernode, State state) {
@@ -120,10 +110,6 @@ public class Node {
 		return depth;
 	}
 	
-	public double getProbability() {
-		return probability;
-	}
-
 	public double getTotalScore() {
 		return totalScore;
 	}
@@ -137,25 +123,28 @@ public class Node {
 		return children;
 	}
 	
+	//add child
 	public void addChild(Node node) {
 		children.add(node);
 	}
 	
 	public String toString() {
 		String result = "(Node type: ";
-		if (this.probability == 0.0) {
-			if (this.parentNode == null) {
-				result += "root | ";
-			} else {
-				result += "A2-A6 | ";
+
+		if(this.parentNode == null) {
+			result += "root | ";
 			}
-		} else {
-			result += "A1 | p: " + probability + " | ";
+		else{
+			result += "A2-A6 | ";
 		}
+
 		result += "d: " + depth + " | s: " + totalScore + " | UCB: " + ucbValue + " | n: " + numberOfTimesVisited +")";
 		result += "\n with " + getNodeState();
 		return result;
 	}
+	
+
+
 	
 	//Main for testing
 

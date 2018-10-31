@@ -88,7 +88,6 @@ public class MCTS {
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
-			System.out.println(selectedNode);
 			// Expansion
 			selectedNode = expand(selectedNode);
 			// Simulation
@@ -150,7 +149,7 @@ public class MCTS {
 						MCTSStateSimulator sim = new MCTSStateSimulator(node, k);
 						double prob = sim.getProbability();
 						State state = sim.returnState();
-						Node childNode = new Node(node, state, prob);
+						Node childNode = new A1Node(node, state, prob);
 					}
 				}
 				else {
@@ -171,16 +170,28 @@ public class MCTS {
 	private double rollout(Node node) {
 		Node currentNode = node; //Randomly generated child node from prevoious currentNode
 		double reward = 0;
+		int timeStep = 0;
 		while(true) {
 			Random rand = new Random();
 			ArrayList<Action> actionSpace = makeActionSpace(currentNode.getNodeState());
 			int actionIndexForRandomAction = rand.nextInt(actionSpace.size()); //use heuristic so that the action is not random? Notice that A1 has the twelve first actions, so the chance of hitting A1 is bigger than the other
 			Action action = actionSpace.get(actionIndexForRandomAction);
-			MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
-			State state = sim.returnState();
-			int timeStep = sim.getTimeStepNumber();
-			currentNode = new Node(currentNode, state);
-			System.out.println(currentNode);
+			System.out.println("Choose action: " + action.getActionType());
+			System.out.println("Rollout: "+ currentNode);
+			if(action.getActionType()==ActionType.MOVE) {
+				MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
+				double probability = sim.getProbability(); //
+				State state = sim.returnState();
+				timeStep = sim.getTimeStepNumber();
+				currentNode = new A1Node(currentNode, state, probability);
+				System.out.println("Next rollout is: " + currentNode);
+			}
+			else {
+				MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
+				State state = sim.returnState();
+				timeStep = sim.getTimeStepNumber();
+				currentNode = new Node(currentNode, state);
+			}
 			if(currentNode.getNodeState().getPos() == goalIndex) { //found goal
 				reward += 100/timeStep; //finding goalstate in 1 action should be better than finding it after 10 actions
 				return reward;
@@ -216,13 +227,13 @@ public class MCTS {
 		double a1Utility =  0;
 		ArrayList<Node> actions = (ArrayList<Node>) this.rootNode.getChildren();
 		for(int i = 0;i<12;i++) {
-			Node kNode = actions.get(i);
+			A1Node kNode = (A1Node) actions.get(i);
 			double kNodeValue = kNode.getTotalScore()*kNode.getProbability(); //scaling down value with the probability of actually getting intoo that node
 			a1Utility += kNodeValue;
 		}
 		utilities.add(a1Utility);
-		for(int j = 12;j<rootActionSpace.size();j++) {
-			utilities.add(rootNode.getChildren().get(j).getTotalScore());
+		for(int j = 12;j<rootActionSpace.size()+11;j++) {
+			utilities.add(actions.get(j).getTotalScore());
 		}
 	}
 	

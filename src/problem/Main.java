@@ -10,10 +10,9 @@ public class Main {
 
         ProblemSpec ps;
         try {
-        	String inputFileName = "C:\\Users\\mariu\\git\\Assignment2AI\\examples\\level_1\\input_lvl1.txt";
-
+        	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\input_lvl1.txt";
             ps = new ProblemSpec(inputFileName);
-            String outputFileName = "C:\\Users\\mariu\\git\\Assignment2AI\\examples\\level_1\\solvedOutput_lvl1.txt";
+            String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\solvedOutput_lvl1.txt";
             char c = 'M';
             Solver solver = new Solver(ps, outputFileName, c);
         } catch (IOException e) {
