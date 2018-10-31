@@ -22,7 +22,148 @@ public class OwnSimulator {
 	
 	//methods
 	
+	/**
+	 * Generate A1Node. Used in MCTS when generating children
+	 * @param state
+	 * @return
+	 */
+	public Node generateA1ChildNode(Node node, int k, double probability) {
+		State state = a1step(node.getNodeState(),k);
+		A1Node a1node = new A1Node(node, state, probability);
+		return a1node;
+	}
+	/**
+	 * Method for getting the next state after A2-A6-action
+	 * @param state
+	 * @return
+	 */
+	public State a1step(State parentState, int k) {
+		State nextState = null;
+		int fuelRequired = getFuelConsumption();
+		int currentFuel = parentState.getFuel();
+		if(fuelRequired >currentFuel) {
+			return parentState;
+		}
+		if(k ==11) {
+			nextState = parentState.changeSlipCondition(true);
+		}
+		else if(k==12) {
+			nextState = parentState.changeBreakdownCondition(true);
+		}
+		else {
+			nextState = parentState.changePosition(k-4, ps.getN());
+			
+		}
+		if(ps.getLevel().getLevelNumber()==1) {
+			return nextState;
+		}
+		else{
+			nextState = nextState.consumeFuel(fuelRequired);
+		}
+		return nextState;
+	}
+	
+	private int getFuelConsumption() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
+	/**
+	 * 
+	 */
+	public Node generateChildNode(Node node, Action action) {
+		State state = step(node.getNodeState(),action);
+		Node childNode = new Node(node, action, state);
+		return childNode;
+		
+	}
+	
+	
+	/**
+	 * Method for getting the next state after A2-A6-action
+	 * @param state
+	 * @return
+	 */
+	public State step(State parentState, Action action) {
+		State nextState = null;
+		switch(action.getActionType().getActionNo()) {
+		case 2:
+			nextState = performA2(parentState, action);
+			break;
+		  case 3:
+	          nextState = performA3(parentState, action);
+	          break;
+	      case 4:
+	          nextState = performA4(parentState, action);
+	          break;
+	      case 5:
+	          nextState = performA5(parentState, action);
+	          break;
+	      case 6:
+	          nextState = performA6(parentState, action);
+	          break;
+		}
+		
+		return nextState;
+	}
+	
+	private State performA2(State parentState, Action a) {
+        if (parentState.getCarType().equals(a.getCarType())) {
+            // changing to same car type does not change state but still costs a step
+            return parentState;
+        }
+
+        return parentState.changeCarType(a.getCarType());
+    }
+
+    /**
+     * Perform CHANGE_DRIVER action
+     *
+     * @param a a CHANGE_DRIVER action object
+     * @return the next state
+     */
+    private State performA3(State parentState, Action a) { 
+    	return parentState.changeDriver(a.getDriverType()); 
+    	}
+
+    /**
+     * Perform the CHANGE_TIRES action
+     *
+     * @param a a CHANGE_TIRES action object
+     * @return the next state
+     */
+    private State performA4(State parentState, Action a) {
+        return parentState.changeTires(a.getTireModel());
+    }
+
+    /**
+     * Perform the ADD_FUEL action
+     *
+     * @param a a ADD_FUEL action object
+     * @return the next state
+     */
+    private State performA5(State parentState,Action a) {
+        // calculate number of steps used for refueling (minus 1 since we add
+        // 1 in main function
+        int stepsRequired = (int) Math.ceil(a.getFuel() / (float) 10);
+        return parentState.addFuel(a.getFuel());
+    }
+
+    /**
+     * Perform the CHANGE_PRESSURE action
+     *
+     * @param a a CHANGE_PRESSURE action object
+     * @return the next state
+     */
+    private State performA6(State parentState, Action a) {
+        return parentState.changeTirePressure(a.getTirePressure());
+    }
+
+	/**
+	 * Method
+	 * @param state
+	 * @return
+	 */
 	
 	public double[] getMoveProbs(State state) {
 		// get parameters of current state

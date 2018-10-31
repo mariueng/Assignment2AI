@@ -17,6 +17,7 @@ public class Solver {
 	private Simulator sim;
 	public static int slipRecoveryTime;
 	public static int repairTime;
+
    
     //constructor
     public Solver(ProblemSpec ps, String outputFileName, char c) {

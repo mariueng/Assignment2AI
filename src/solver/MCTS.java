@@ -99,12 +99,15 @@ public class MCTS {
 			double reward = rollout(selectedNode);
 			// Backpropagation
 			backProgagate(selectedNode, reward);
+			end = System.currentTimeMillis();
 			
 		}
+		
 		
 		makeUtilities();
 		int index = utilities.indexOf(Collections.max(utilities)); //index value of the best action from rootNode
 		Action action = rootActionSpace.get(index);
+		System.out.println("Chose action: " + action);
 		return action;
 	}
 	
@@ -142,6 +145,9 @@ public class MCTS {
 			return node;
 		} else {
 			// generate children nodes for each available 
+			if(node==rootNode) {
+				System.out.println("LAGE BARN til ROTNODE");
+			}
 			generateChildren(node);
 		}
 		return node.getChildren().get(0);
@@ -153,16 +159,16 @@ public class MCTS {
 		
 		for (Action action : actionSpace) {
 			if (action.getActionType() == ActionType.MOVE) {
-				for (int k = -4; k < 7; k++) { 
+				double[] moveProbs = simulator.getMoveProbs(node.getNodeState());
+				for (int k = 0; k <12; k++) { 
 					//add childnode for each k, when action = A1
-					State state = StateMaker.getNextA1State(node, k);
-					double prob = StateMaker.calculateProbability(node, k);
-					Node childNode = new A1Node(node, state, prob);
+					Node childNode = simulator.generateA1ChildNode(node, k,moveProbs[k]);
+					node.addChild(childNode);
 				}
 			}
 			else {
-				State state = MCTSStateSimulator.getNextState(node, action);
-				Node childNode = new Node(node, action, state);
+				Node childNode = simulator.generateChildNode(node, action);
+				node.addChild(childNode);
 			}
 		}
 	}
@@ -176,27 +182,29 @@ public class MCTS {
 		Node currentNode = node; //Randomly generated child node from prevoious currentNode
 		double reward = 0;
 		int timeStep = node.getTimeStep();
-		while(true) {
+		while(true) {			
 			Random rand = new Random();
 			ArrayList<Action> actionSpace = makeActionSpace(currentNode.getNodeState());
-			int actionIndexForRandomAction = rand.nextInt(actionSpace.size()); //use heuristic so that the action is not random? Notice that A1 has the twelve first actions, so the chance of hitting A1 is bigger than the other
-			Action action = actionSpace.get(actionIndexForRandomAction);
-			System.out.println("Choose action: " + action.getActionType());
-			System.out.println("Rollout: "+ currentNode);
+			Action action = heuristicRolloutAction(actionSpace, rand);
 			if(action.getActionType()==ActionType.MOVE) {
-				State state = MCTSStateSimulator.getNextA1RolloutState(currentNode);
-				timeStep = sim.getTimeStepNumber();
-				currentNode = new A1Node(currentNode, state, probability);
-				System.out.println("Next rollout is: " + currentNode);
+				double[] moveProbs = simulator.getMoveProbs(currentNode.getNodeState());
+				double p = rand.nextDouble();
+				int k = 0;
+				double counter = 0;
+				for(int i = 0;i<12;i++) {
+					counter +=moveProbs[i];
+					if(counter>p) {
+						k = i;
+						break;
+					}
+				}
+				currentNode = simulator.generateA1ChildNode(currentNode, k, moveProbs[k]);
 			}
 			else {
-				MCTSStateSimulator sim = new MCTSStateSimulator(currentNode, action);
-				State state = sim.returnState();
-				timeStep = sim.getTimeStepNumber();
-				currentNode = new Node(currentNode, state);
+				currentNode = simulator.generateChildNode(currentNode, action);
 			}
 			if(currentNode.getNodeState().getPos() == goalIndex) { //found goal
-				reward += 100/timeStep; //finding goalstate in 1 action should be better than finding it after 10 actions
+				reward += 100/(timeStep+1); //finding goalstate in 1 action should be better than finding it after 10 actions
 				return reward;
 			}
 			else if(timeStep >= maxNumberOfTimeSteps) { //did not find goal
@@ -207,20 +215,37 @@ public class MCTS {
 		}
 	}
 	
+	private Action heuristicRolloutAction(ArrayList<Action> actionSpace, Random rand) {
+		int tall = rand.nextInt(2);
+		if(tall == 1) {
+			return actionSpace.get(0);
+		}
+		else {
+			tall = rand.nextInt(actionSpace.size()-1)+1;
+			return actionSpace.get(tall);
+			
+		}
+	}
+
 	/**
 	 * PHASE 4 - Backpropagates rollout to all parent nodes
 	 * NB: remember to plus 1 to numberOfVisited to all "parents"!
 	 */
 	private void backProgagate(Node superNode, double reward) {
 		Node currentNode = superNode;
-		while(!(currentNode==null)) {
+		while(!(currentNode.getParentNode()==null)) {
 			int prevNumberOfTimesVisited = currentNode.getNumberOfTimesVisited();
 			currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited
+			
 			double prevTotalScore = currentNode.getTotalScore();
 			currentNode.setTotalScore(prevTotalScore + reward); //update total score
 			currentNode.calculateUcbScore(); //update ucb-score
 			currentNode = currentNode.getParentNode();
 		}
+		int prevNumberOfTimesVisited = currentNode.getNumberOfTimesVisited();
+		currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited for rootNode
+		double prevTotalScore = currentNode.getTotalScore();
+		currentNode.setTotalScore(prevTotalScore +reward);
 	}
 	
 	
@@ -229,6 +254,7 @@ public class MCTS {
 	private void makeUtilities() {
 		double a1Utility =  0;
 		ArrayList<Node> actions = (ArrayList<Node>) this.rootNode.getChildren();
+		System.out.println("Actions: " + actions);
 		for(int i = 0;i<12;i++) {
 			A1Node kNode = (A1Node) actions.get(i);
 			double kNodeValue = kNode.getTotalScore()*kNode.getProbability(); //scaling down value with the probability of actually getting intoo that node

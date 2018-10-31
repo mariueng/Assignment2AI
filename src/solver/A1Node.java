@@ -24,7 +24,7 @@ public class A1Node extends Node {
 	
 	//toString
 	public String toString() {
-		String result = "(Node type: ";
+		String result = timeStep + " (Node type: ";
 
 		if(this.getParentNode() == null) {
 			result += "root | ";

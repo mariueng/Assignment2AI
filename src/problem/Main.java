@@ -7,7 +7,7 @@ import solver.Solver;
 public class Main {
 
     public static void main(String[] args) {
-
+ 
         ProblemSpec ps;
         try {
         	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\input_lvl1.txt";

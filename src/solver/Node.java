@@ -19,7 +19,7 @@ public class Node implements Comparable<Node>{
 	private State nodeState;
 	private final int explConstant = 2; //This constant can be changed if needs be
 	private List<Node> children = new ArrayList<>();
-	private int timeStep;
+	protected int timeStep;
 	
 	//constructor for root node
 	public Node(State state, int rootTimeStep) {
@@ -43,6 +43,7 @@ public class Node implements Comparable<Node>{
 		this.depth = parent.depth+1;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
+		this.timeStep = parent.getTimeStep();
 		if(state.isInBreakdownCondition()) {
 			this.timeStep += Solver.repairTime;
 		}
@@ -130,7 +131,7 @@ public class Node implements Comparable<Node>{
 	}
 	
 	public String toString() {
-		String result = "(Node type: ";
+		String result = timeStep + " (Node type: ";
 
 		if(this.parentNode == null) {
 			result += "root | ";
