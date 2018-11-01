@@ -97,15 +97,18 @@ public class MCTS {
 			selectedNode = expand(selectedNode);
 			// Simulation
 			double reward = rollout(selectedNode);
+
 			// Backpropagation
 			backProgagate(selectedNode, reward);
 			end = System.currentTimeMillis();
+			
 			
 		}
 		
 		
 		makeUtilities();
 		int index = utilities.indexOf(Collections.max(utilities)); //index value of the best action from rootNode
+		System.out.println("utilities: " + utilities);
 		Action action = rootActionSpace.get(index);
 		System.out.println("Chose action: " + action);
 		return action;
@@ -120,15 +123,20 @@ public class MCTS {
 	private Node select() {
 		Node currentNode = this.rootNode; // the node to expand/rollout
 		while(true) {
-			
 			// check whether the current node is a leaf node
 			if(currentNode.getChildren().size() == 0) {
 				return currentNode;
 			}
 			// if not, choose the child node of current that maximises UCB
 			else {
-				Collections.sort(currentNode.getChildren());
-				currentNode = currentNode.getChildren().get(0);
+				ArrayList<Double> ucbValues = new ArrayList<>();
+				for(Node node:currentNode.getChildren()) {
+					ucbValues.add(node.getUcbValue());
+				}
+				int indexForHighestUsb = ucbValues.indexOf(Collections.max(ucbValues));
+				currentNode = currentNode.getChildren().get(indexForHighestUsb);
+				
+				
 			}
 		}
 	}
@@ -155,6 +163,7 @@ public class MCTS {
 	
 	// helper method for generating all children of a node
 	private void generateChildren(Node node) {
+		
 		ArrayList<Action> actionSpace = makeActionSpace(node.getNodeState());
 		
 		for (Action action : actionSpace) {
@@ -208,9 +217,9 @@ public class MCTS {
 				return reward;
 			}
 			else if(timeStep >= maxNumberOfTimeSteps) { //did not find goal
-				return reward; //return 0 because the terminal state was a failure
+				return -1; //return 0 because the terminal state was a failure
 			}
-			
+			timeStep = currentNode.getTimeStep();
 			
 		}
 	}
@@ -233,10 +242,11 @@ public class MCTS {
 	 */
 	private void backProgagate(Node superNode, double reward) {
 		Node currentNode = superNode;
+
 		while(!(currentNode.getParentNode()==null)) {
 			int prevNumberOfTimesVisited = currentNode.getNumberOfTimesVisited();
 			currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited
-			
+			//System.out.println(currentNode +" was awarded : " + reward);
 			double prevTotalScore = currentNode.getTotalScore();
 			currentNode.setTotalScore(prevTotalScore + reward); //update total score
 			currentNode.calculateUcbScore(); //update ucb-score
@@ -246,6 +256,7 @@ public class MCTS {
 		currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited for rootNode
 		double prevTotalScore = currentNode.getTotalScore();
 		currentNode.setTotalScore(prevTotalScore +reward);
+		//System.out.println(currentNode +" was awarded : " + reward);
 	}
 	
 	
@@ -254,10 +265,11 @@ public class MCTS {
 	private void makeUtilities() {
 		double a1Utility =  0;
 		ArrayList<Node> actions = (ArrayList<Node>) this.rootNode.getChildren();
-		System.out.println("Actions: " + actions);
 		for(int i = 0;i<12;i++) {
 			A1Node kNode = (A1Node) actions.get(i);
 			double kNodeValue = kNode.getTotalScore()*kNode.getProbability(); //scaling down value with the probability of actually getting intoo that node
+			System.out.println("Score on A1node " + i + " is: " + kNode.getTotalScore() + " and prob: " + kNode.getProbability());
+			
 			a1Utility += kNodeValue;
 		}
 		utilities.add(a1Utility);

@@ -58,6 +58,7 @@ public class Solver {
 	    	} else {
 	    		rootNodeTimeStep++;
 	    	}
+	    	isFinished = (sim.isGoalState(currentState) || sim.getSteps()==ps.getMaxT());
 	    	
 	    }
 	    

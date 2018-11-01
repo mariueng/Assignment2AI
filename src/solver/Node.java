@@ -5,7 +5,7 @@ import java.util.List;
 import problem.Action;
 import simulator.State;
 
-public class Node implements Comparable<Node>{
+public class Node{
 	
 	private final static int bigValue = 100000;
 	
@@ -145,10 +145,6 @@ public class Node implements Comparable<Node>{
 		return result;
 	}
 
-	@Override
-	public int compareTo(Node other) {
-		return Double.compare(this.getUcbValue(), other.getUcbValue());
-	}
 	
 	//getTimeStep
 	public int getTimeStep() {

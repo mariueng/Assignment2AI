@@ -19,7 +19,7 @@ public class Main {
             System.out.println("IO Exception occurred");
             System.exit(1);
         }
-        System.out.println("Finished loading!");
+        System.out.println("Finished loading!"); 
 
     }
 }
