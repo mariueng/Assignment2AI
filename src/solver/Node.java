@@ -20,6 +20,7 @@ public class Node{
 	private final int explConstant = 2; //This constant can be changed if needs be
 	private List<Node> children = new ArrayList<>();
 	protected int timeStep;
+	private Node superNode; //Only interesting for simulated node in rollout. Supernode is the leaf node that this Node is rollouted from
 	
 	//constructor for root node
 	public Node(State state, int rootTimeStep) {
@@ -43,35 +44,36 @@ public class Node{
 		this.depth = parent.depth+1;
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
-		this.timeStep = parent.getTimeStep();
+		this.timeStep = parent.getTimeStep() +1;
+		System.out.println("Node got timestep: " + timeStep);
 		if(state.isInBreakdownCondition()) {
-			this.timeStep += Solver.repairTime;
+			this.timeStep += Solver.repairTime -1;
 		}
 		else if(state.isInSlipCondition()) {
-			this.timeStep += Solver.slipRecoveryTime;
-		} else {
-			this.timeStep++;
+			this.timeStep += Solver.slipRecoveryTime -1;
 		}
-		this.ucbValue = bigValue;
+		this.ucbValue = calculateUcbScore();
 		
 	}
 
 	
-	//constructor for simulated node
-	public Node(Node supernode, State state) {
-		this(supernode, null, state);
+	//constructor for simulated node. IS THIS EVEN USED?
+	public Node(Node superNode, State state) {
+		this(superNode, null, state);
+		System.out.println("HEI");
 		this.children = null;
+		System.out.println(this.timeStep);
 	}
 	
 	//methods
 	
 
 	
-	public void calculateUcbScore() {
+	public double calculateUcbScore() {
 		if (numberOfTimesVisited == 0) {
-			this.ucbValue = bigValue;
+			return bigValue;
 		}
-		this.ucbValue = totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
+		return totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
 	}
 
 	//getters and setters
@@ -106,6 +108,10 @@ public class Node{
 
 	public Action getPrevAction() {
 		return prevAction;
+	}
+	
+	public Node getSuperNode() {
+		return this.superNode;
 	}
 
 	public Node getParentNode() {

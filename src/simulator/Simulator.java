@@ -186,7 +186,7 @@ public class Simulator {
 
         // Sample move distance
         int moveDistance = sampleMoveDistance();
-        System.out.println("moving: " + moveDistance);
+        System.out.println("moving with k: " + moveDistance);
 
         // handle slip and breakdown cases, addition of steps handled in step method
         if (moveDistance == ProblemSpec.SLIP) {
@@ -230,7 +230,7 @@ public class Simulator {
         for(Double d:moveProbs) {
         	probs = probs + d + ", ";
         }
-        System.out.println(probs);
+        System.out.println("moveprobs: " + probs);
         double p = Math.random();
         System.out.println("p: " + p);
         double pSum = 0;

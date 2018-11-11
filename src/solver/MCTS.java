@@ -105,12 +105,17 @@ public class MCTS {
 			
 		}
 		
+		ArrayList<Integer> timesVisited = new ArrayList<>();
+		for(Node node : rootNode.getChildren()) {
+			timesVisited.add(node.getNumberOfTimesVisited());
+		}
+		System.out.println("Visited: " + timesVisited);
 		
 		makeUtilities();
 		int index = utilities.indexOf(Collections.max(utilities)); //index value of the best action from rootNode
-		System.out.println("utilities: " + utilities);
+		System.out.println("Utilities: " + utilities);
 		Action action = rootActionSpace.get(index);
-		System.out.println("Chose action: " + action);
+		//System.out.println("Chose action: " + action);
 		return action;
 	}
 	
@@ -154,7 +159,7 @@ public class MCTS {
 		} else {
 			// generate children nodes for each available 
 			if(node==rootNode) {
-				System.out.println("LAGE BARN til ROTNODE");
+				System.out.println("LAGE BARN til ROTNOD");
 			}
 			generateChildren(node);
 		}
@@ -188,9 +193,11 @@ public class MCTS {
 	 * PHASE 3 - Simulates a random rollout
 	 */
 	private double rollout(Node node) {
-		Node currentNode = node; //Randomly generated child node from prevoious currentNode
+		Node currentNode = node; //Currentnode should be the randomly generated child node from prevoious currentNode
 		double reward = 0;
-		int timeStep = node.getTimeStep();
+		int timeStep = node.getTimeStep(); //timestep starts on the input-nodes timestep
+		
+		//System.out.println("TimeStep on superNode: " +timeStep);
 		while(true) {			
 			Random rand = new Random();
 			ArrayList<Action> actionSpace = makeActionSpace(currentNode.getNodeState());
@@ -220,7 +227,6 @@ public class MCTS {
 				return -1; //return 0 because the terminal state was a failure
 			}
 			timeStep = currentNode.getTimeStep();
-			
 		}
 	}
 	
@@ -268,7 +274,7 @@ public class MCTS {
 		for(int i = 0;i<12;i++) {
 			A1Node kNode = (A1Node) actions.get(i);
 			double kNodeValue = kNode.getTotalScore()*kNode.getProbability(); //scaling down value with the probability of actually getting intoo that node
-			System.out.println("Score on A1node " + i + " is: " + kNode.getTotalScore() + " and prob: " + kNode.getProbability());
+			System.out.println("Score on A1node " + i + " is: " + kNode.getTotalScore());
 			
 			a1Utility += kNodeValue;
 		}
