@@ -45,7 +45,6 @@ public class Node{
 		this.totalScore = 0;
 		this.numberOfTimesVisited = 0;
 		this.timeStep = parent.getTimeStep() +1;
-		System.out.println("Node got timestep: " + timeStep);
 		if(state.isInBreakdownCondition()) {
 			this.timeStep += Solver.repairTime -1;
 		}
@@ -73,7 +72,12 @@ public class Node{
 		if (numberOfTimesVisited == 0) {
 			return bigValue;
 		}
-		return totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
+		if(this.parentNode==null) {
+			System.out.println("UPDATING UCB FOR ROOTNODE");
+		}
+		double a = totalScore/numberOfTimesVisited + Math.sqrt(explConstant*Math.log(parentNode.getNumberOfTimesVisited())/totalScore);
+		setUcbValue(a);
+		return a;
 	}
 
 	//getters and setters

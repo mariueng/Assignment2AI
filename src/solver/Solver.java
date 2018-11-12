@@ -24,9 +24,15 @@ public class Solver {
     	this.ps = ps;
     	this.outputFileName = outputFileName;
     	this.sim = new Simulator(ps, outputFileName);
+    	slipRecoveryTime = ps.getSlipRecoveryTime();
+    	repairTime = ps.getRepairTime();
     	if (c == 'r') {
     		RunRandom rr = new RunRandom(ps, outputFileName);
-    	} else {
+    	} 
+    	else if(c == 'G'){
+    		RunGreedy rg = new RunGreedy(ps, outputFileName);
+    	}
+    	else {
     		runMCTS(ps);
     	}
     }

@@ -10,10 +10,10 @@ public class Main {
  
         ProblemSpec ps;
         try {
-        	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\input_lvl1.txt";
+        	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_5\\input_lvl5_2.txt";
             ps = new ProblemSpec(inputFileName);
-            String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_1\\solvedOutput_lvl1.txt";
-            char c = 'M';
+            String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_5\\solvedOutput_lvl5.txt";
+            char c = 'G';
             Solver solver = new Solver(ps, outputFileName, c);
         } catch (IOException e) {
             System.out.println("IO Exception occurred");

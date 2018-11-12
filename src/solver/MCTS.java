@@ -93,6 +93,7 @@ public class MCTS {
 		while (end < start + 14000) { //inner loop
 			// Selection
 			Node selectedNode = select(); //select the node with the highest ucb-value
+			
 			// Expansion
 			selectedNode = expand(selectedNode);
 			// Simulation
@@ -140,8 +141,6 @@ public class MCTS {
 				}
 				int indexForHighestUsb = ucbValues.indexOf(Collections.max(ucbValues));
 				currentNode = currentNode.getChildren().get(indexForHighestUsb);
-				
-				
 			}
 		}
 	}
@@ -220,10 +219,12 @@ public class MCTS {
 				currentNode = simulator.generateChildNode(currentNode, action);
 			}
 			if(currentNode.getNodeState().getPos() == goalIndex) { //found goal
-				reward += 100/(timeStep+1); //finding goalstate in 1 action should be better than finding it after 10 actions
+				reward += 100.0/((double) timeStep+1); //finding goalstate in 1 action should be better than finding it after 10 actions
+				//System.out.println("Found goal on timestep: " + currentNode.getTimeStep());
 				return reward;
 			}
 			else if(timeStep >= maxNumberOfTimeSteps) { //did not find goal
+				//System.out.println("Did not find goal");
 				return -1; //return 0 because the terminal state was a failure
 			}
 			timeStep = currentNode.getTimeStep();
@@ -254,6 +255,7 @@ public class MCTS {
 			currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited
 			//System.out.println(currentNode +" was awarded : " + reward);
 			double prevTotalScore = currentNode.getTotalScore();
+			
 			currentNode.setTotalScore(prevTotalScore + reward); //update total score
 			currentNode.calculateUcbScore(); //update ucb-score
 			currentNode = currentNode.getParentNode();
@@ -262,6 +264,8 @@ public class MCTS {
 		currentNode.setNumberOfTimesVisited(prevNumberOfTimesVisited +1);//update number of times visited for rootNode
 		double prevTotalScore = currentNode.getTotalScore();
 		currentNode.setTotalScore(prevTotalScore +reward);
+		
+		
 		//System.out.println(currentNode +" was awarded : " + reward);
 	}
 	
