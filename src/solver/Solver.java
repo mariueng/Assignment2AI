@@ -14,7 +14,7 @@ import problem.TirePressure;
 import simulator.Simulator;
 import simulator.State;
 
-public class RunGreedy {
+public class Solver {
 	
 	//fields
 	private Simulator sim;
@@ -34,7 +34,7 @@ public class RunGreedy {
     public static int fuelNeededToMove;
    
 	
-	public RunGreedy(ProblemSpec ps, String outputFile) {
+	public Solver(ProblemSpec ps, String outputFile) {
 		this.ps = ps;
         this.cars=(ArrayList<String>) ps.getCarOrder();
         this.drivers = (ArrayList<String>) ps.getDriverOrder();

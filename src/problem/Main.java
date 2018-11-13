@@ -2,7 +2,7 @@ package problem;
 
 import java.io.IOException;
 
-import solver.RunGreedy;
+import solver.Solver;
 
 public class Main {
 
@@ -10,10 +10,10 @@ public class Main {
  
         ProblemSpec ps;
         try {
-        	String inputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_5\\input_lvl5_2.txt";
+        	String inputFileName = args[0];
             ps = new ProblemSpec(inputFileName);
-            String outputFileName = "C:\\Users\\jakob\\git\\Assignment2AI\\examples\\level_5\\solvedOutput_lvl5.txt";
-            RunGreedy rg = new RunGreedy(ps, outputFileName);
+            String outputFileName = args[1];
+            Solver rg = new Solver(ps, outputFileName);
             rg.run();
         } catch (IOException e) {
             System.out.println("IO Exception occurred");
