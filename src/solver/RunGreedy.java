@@ -2,46 +2,31 @@ package solver;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Random;
 
-import problem.*;
-import simulator.*;
+import problem.Action;
+import problem.ActionType;
+import problem.Level;
+import problem.ProblemSpec;
+import problem.Terrain;
+import problem.Tire;
+import problem.TirePressure;
+import simulator.Simulator;
+import simulator.State;
 
 public class RunGreedy {
 	
 	//fields
 	private Simulator sim;
-	private List<Node> treeNodes;
 	private ProblemSpec ps;
-    private int goalIndex; //N
     private Level level;
     private int maxNumberOfTimeSteps;
     private State currentState;
-    private int slipTimePenalty;
-    private int breakdownTimePenalty;
-    private double discountFactor;
-    private List<ActionType> actions = new ArrayList<>();
-    private int numberOfCarTypes;
-    private int numberOfDrivers;
-    private int numberOfTireTypes;
-    private int numberOfActions;
-    private Terrain[] map; //1D map of environment
+    private ArrayList<String> drivers = new ArrayList<String>(); //list of drivers in the order they appear in the inputfile
+    private ArrayList<String> cars = new ArrayList<String>(); //list of cars in the order they appear in the inputfile
+    private ArrayList<Tire> tires = new ArrayList<Tire>();; //list of tires in the order they appear in the inputfile
    
-    private ArrayList<Terrain> terrainTypes = new ArrayList();
-    private ArrayList<String> drivers = new ArrayList(); //list of drivers in the order they appear in the inputfile
-    private ArrayList<String> cars = new ArrayList(); //list of cars in the order they appear in the inputfile
-    private ArrayList<Tire> tires = new ArrayList();; //list of tires in the order they appear in the inputfile
-   
-    private LinkedHashMap<String, double[]> carToMoveProbability; //list of 12 double values to each car
-    private LinkedHashMap<String, double[]> driverToMoveProbability; //list of 12 double values to each driver
-    private LinkedHashMap<String, double[]> tireToMoveProbability; //list of 12 double values to each driver
-    private double[] terrainToSlipProbability; //hashmap with NT elements. Probability of slipping to each terrain type
-    private int[][] fuelConsumption; //Each number is the amount of fuel used by a single moving action (A1) when pressure of tire is 100%. First number:
-                                    //first terrain type and first car type. Second: first terrain type, second car type, etc.
+
     
     public static int backStepWeight = -10;
     public static int forwardStepWeight = 10;
@@ -51,31 +36,15 @@ public class RunGreedy {
 	
 	public RunGreedy(ProblemSpec ps, String outputFile) {
 		this.ps = ps;
-        this.breakdownTimePenalty=ps.getRepairTime();
-        this.slipTimePenalty = ps.getSlipRecoveryTime();
         this.cars=(ArrayList<String>) ps.getCarOrder();
         this.drivers = (ArrayList<String>) ps.getDriverOrder();
         this.tires = (ArrayList<Tire>) ps.getTireOrder();
         this.level = ps.getLevel();
-        this.actions = level.getAvailableActions();
-        this.carToMoveProbability = ps.getCarMoveProbability();
-        this.terrainToSlipProbability = ps.getSlipProbability();
-        this.driverToMoveProbability = ps.getDriverMoveProbability();
-        this.fuelConsumption = ps.getFuelUsage();
-        this.terrainTypes = (ArrayList<Terrain>) level.getTerrainTypes();
-        this.map = ps.getEnvironmentMap();
-        this.numberOfCarTypes = cars.size();
-        this.numberOfDrivers = drivers.size();
-        this.numberOfTireTypes = tires.size();
-        this.numberOfActions = actions.size();
-        this.discountFactor = ps.getDiscountFactor();
-        this.goalIndex = ps.getN();
+        level.getAvailableActions();
+        ps.getN();
         this.maxNumberOfTimeSteps = ps.getMaxT();
         this.currentState = State.getStartState(ps.getFirstCarType(), ps.getFirstDriver(), ps.getFirstTireModel());
         this.sim = new Simulator(ps, outputFile);
-        run();
-        
-        
 	}
 	
 	/**
@@ -83,9 +52,9 @@ public class RunGreedy {
      * @param ouputFileName
      */
     
-    private void run() {
+    public void run() {
     	boolean finished = false;
-    	Random rand = new Random();
+    	new Random();
     	Action action = null;
     	int step = maxNumberOfTimeSteps;
     	State startState = State.getStartState(currentState.getCarType(), currentState.getDriver(), currentState.getTireModel());
@@ -134,8 +103,7 @@ public class RunGreedy {
     		if(fuelNeeded>fuelAvailable) {
     			notEnoughFuel = true;
     		}
-    		if(notEnoughFuel){
-    			//fillTank();
+    		if(notEnoughFuel) {
     			changeCarTwoTimes();
     		}
     		
@@ -387,13 +355,7 @@ public class RunGreedy {
         }
         return fuelConsumption;
     }
-    
-    private void fillTank() {
-    	System.out.println("Filling the tank..");
-		ActionType b = ActionType.ADD_FUEL;
-		Action action = new Action(b,(ps.FUEL_MAX)/2);
-		currentState = sim.step(action);
-    }
+
     
     private void changeCarTwoTimes() {
     	System.out.println("Change car two times..");
